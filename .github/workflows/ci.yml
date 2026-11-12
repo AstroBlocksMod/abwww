@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: abwww
+          POSTGRES_PASSWORD: abwww
+          POSTGRES_DB: abwww
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U abwww"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      valkey:
+        image: valkey/valkey:9-alpine
+        ports: ['6379:6379']
+    env:
+      DATABASE_URL: postgres://abwww:abwww@localhost:5432/abwww
+      VALKEY_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.4'
+      - run: bun install --frozen-lockfile
+      - run: bun fmt --check
+      - run: bun run check
+      - run: bun run test:server
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run test:unit
+      - run: bun run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

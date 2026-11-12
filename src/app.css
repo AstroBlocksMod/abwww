@@ -1,0 +1,465 @@
+/*
+	The palette is the editor's light theme (packages/scratch-gui/src/lib/themes/gui/light.js and
+	accent/blue.js), so the site and the editor read as one thing: Scratch blue for the bar and the
+	buttons, pale blue surfaces, the editor's slate text color.
+*/
+:root {
+	color-scheme: light dark;
+	--blue: hsl(215, 100%, 65%); /* #4C97FF, the editor's accent and menu bar */
+	--blue-dark: hsl(215, 100%, 58%);
+	--blue-transparent: hsla(215, 100%, 65%, 0.35);
+	--bg: hsl(215, 100%, 97%); /* a touch lighter than the editor's #E5F0FF */
+	--surface: #ffffff;
+	--surface-2: hsl(215, 75%, 95%); /* #E9F1FC */
+	--border: hsl(215, 50%, 90%); /* #D9E3F2 */
+	--text: hsl(225, 15%, 40%); /* #575E75 */
+	--text-strong: hsl(225, 15%, 25%);
+	--muted: hsl(225, 12%, 55%);
+	--danger: #ff4c4c;
+	--radius: 8px;
+	--shadow: 0 1px 3px hsla(215, 50%, 30%, 0.08);
+	font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #111111;
+		--surface: #1e1e1e;
+		--surface-2: #2e2e2e;
+		--border: #3a3a3a;
+		--text: #d8d8d8;
+		--text-strong: #eeeeee;
+		--muted: #9a9a9a;
+		--shadow: none;
+	}
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--text);
+}
+
+/* The footer stays at the bottom even when a page is short. */
+body > div {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+main {
+	flex: 1;
+	width: 100%;
+}
+
+a {
+	color: var(--blue);
+}
+
+h1,
+h2,
+h3 {
+	color: var(--text-strong);
+	line-height: 1.25;
+	font-weight: 700;
+}
+
+h1 {
+	font-size: 1.6rem;
+}
+
+h2 {
+	font-size: 1.15rem;
+}
+
+/* The bar, like the editor's menu bar and the Scratch website's header. */
+.site-header {
+	background: var(--blue);
+	color: #fff;
+	box-shadow: 0 1px 0 hsla(0, 0%, 0%, 0.12);
+}
+
+.site-header .inner {
+	max-width: 1120px;
+	margin: 0 auto;
+	padding: 0 1rem;
+	height: 3.25rem;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.site-header .brand {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	color: #fff;
+	text-decoration: none;
+	font-weight: 700;
+	font-size: 1.1rem;
+	padding-right: 0.75rem;
+}
+
+.site-header .brand img {
+	width: 32px;
+	height: 32px;
+	image-rendering: pixelated;
+}
+
+.site-header nav {
+	display: flex;
+	align-items: stretch;
+	height: 100%;
+	flex: 1;
+}
+
+.site-header nav .spacer {
+	flex: 1;
+}
+
+.site-header nav a,
+.site-header nav button {
+	display: flex;
+	align-items: center;
+	padding: 0 0.8rem;
+	color: #fff;
+	text-decoration: none;
+	font: inherit;
+	font-weight: 600;
+	background: none;
+	border: 0;
+	cursor: pointer;
+}
+
+.site-header nav a:hover,
+.site-header nav button:hover,
+.site-header nav a.active {
+	background: hsla(0, 0%, 0%, 0.12);
+}
+
+.site-header nav .join {
+	background: hsla(0, 0%, 100%, 0.2);
+}
+
+main {
+	max-width: 1120px;
+	margin: 0 auto;
+	padding: 1.5rem 1rem 3rem;
+}
+
+.site-footer {
+	background: var(--surface-2);
+	border-top: 1px solid var(--border);
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+
+.site-footer .inner {
+	max-width: 1120px;
+	margin: 0 auto;
+	padding: 1.25rem 1rem 2rem;
+}
+
+.card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 1rem 1.25rem;
+}
+
+.card > :first-child {
+	margin-top: 0;
+}
+
+.card > :last-child {
+	margin-bottom: 0;
+}
+
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+	align-items: center;
+}
+
+.section-title {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+	margin: 0 0 0.75rem;
+}
+
+/* Project cards, like the Scratch website's: picture on top, name and author under it. */
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1rem;
+}
+
+.project-card {
+	display: block;
+	text-decoration: none;
+	color: var(--text);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	overflow: hidden;
+	transition: box-shadow 0.15s ease;
+}
+
+.project-card:hover {
+	box-shadow: 0 0 0 3px var(--blue-transparent);
+}
+
+.project-card .thumb {
+	aspect-ratio: 4 / 3;
+	background: var(--surface-2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.project-card .thumb img {
+	width: 40%;
+	image-rendering: pixelated;
+	opacity: 0.6;
+}
+
+.project-card .body {
+	padding: 0.6rem 0.75rem 0.75rem;
+}
+
+.project-card .title {
+	font-weight: 700;
+	color: var(--text-strong);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.project-card .meta {
+	color: var(--muted);
+	font-size: 0.85rem;
+}
+
+/* Forms */
+form.stack label {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	font-weight: 600;
+	color: var(--text-strong);
+}
+
+input[type='text'],
+input[type='password'],
+input[type='number'],
+input[type='file'],
+textarea,
+select {
+	font: inherit;
+	padding: 0.5rem 0.65rem;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: var(--surface);
+	color: var(--text);
+	max-width: 100%;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+	outline: none;
+	border-color: var(--blue);
+	box-shadow: 0 0 0 3px var(--blue-transparent);
+}
+
+textarea {
+	min-height: 6rem;
+	resize: vertical;
+}
+
+/* Buttons, like the editor's: solid blue, white bold text, rounded. */
+button,
+.button {
+	font: inherit;
+	font-weight: 700;
+	padding: 0.5rem 1rem;
+	border-radius: 6px;
+	border: 1px solid var(--blue);
+	background: var(--blue);
+	color: #fff;
+	cursor: pointer;
+	text-decoration: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	line-height: 1.2;
+}
+
+button:hover,
+.button:hover {
+	background: var(--blue-dark);
+	border-color: var(--blue-dark);
+}
+
+button.secondary,
+.button.secondary {
+	background: var(--surface);
+	color: var(--blue);
+	border-color: var(--border);
+}
+
+button.secondary:hover,
+.button.secondary:hover {
+	background: var(--surface-2);
+	border-color: var(--blue);
+}
+
+button.danger,
+.button.danger {
+	background: var(--surface);
+	color: var(--danger);
+	border-color: var(--danger);
+}
+
+button.danger:hover,
+.button.danger:hover {
+	background: var(--danger);
+	color: #fff;
+}
+
+button.link {
+	background: none;
+	border: none;
+	padding: 0;
+	font-weight: inherit;
+	color: var(--blue);
+}
+
+button.link:hover {
+	background: none;
+	text-decoration: underline;
+}
+
+.notice {
+	padding: 0.75rem 1rem;
+	border-radius: 6px;
+	border: 1px solid var(--border);
+	background: var(--surface);
+}
+
+.notice.error {
+	border-color: var(--danger);
+	color: var(--danger);
+}
+
+.notice.success {
+	border-color: var(--blue);
+	background: var(--surface-2);
+}
+
+.muted {
+	color: var(--muted);
+}
+
+.pill {
+	display: inline-block;
+	padding: 0.05rem 0.5rem;
+	border-radius: 999px;
+	background: var(--surface-2);
+	color: var(--muted);
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+/* The project page: player on the left, the project's words on the right, like Scratch. */
+.project-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 320px;
+	gap: 1.25rem;
+	align-items: start;
+}
+
+@media (max-width: 860px) {
+	.project-layout {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.project-heading {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.project-heading h1 {
+	margin: 0;
+}
+
+/* The embed is a 48px bar over a stage that scales to the width: 800 by 600 at full size. */
+.player {
+	width: 100%;
+	max-width: 800px;
+	aspect-ratio: 800 / 648;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--surface);
+	overflow: hidden;
+}
+
+.player-frame {
+	width: 100%;
+	height: 100%;
+	border: 0;
+	display: block;
+}
+
+code,
+.code {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	background: var(--surface-2);
+	padding: 0.1rem 0.35rem;
+	border-radius: 4px;
+	border: 1px solid var(--border);
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+th,
+td {
+	text-align: left;
+	padding: 0.5rem 0.6rem;
+	border-bottom: 1px solid var(--border);
+	vertical-align: top;
+}
+
+th {
+	color: var(--text-strong);
+}
+
+pre.notes {
+	white-space: pre-wrap;
+	font: inherit;
+	margin: 0;
+}

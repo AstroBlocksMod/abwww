@@ -1,0 +1,52 @@
+{
+	"name": "abwww",
+	"version": "0.1.0",
+	"private": true,
+	"license": "AGPL-3.0-only",
+	"type": "module",
+	"imports": {
+		"#lib": "./src/lib/index.js",
+		"#lib/*": "./src/lib/*"
+	},
+	"scripts": {
+		"dev": "bun --bun vite dev",
+		"build": "bun --bun vite build",
+		"preview": "bun ./build",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo",
+		"fmt": "bun fmt",
+		"fmt:check": "bun fmt --check",
+		"test": "bun run test:server && bun run test:unit",
+		"test:server": "bun test src/lib/server",
+		"test:unit": "vitest --run",
+		"db:generate": "drizzle-kit generate",
+		"db:check": "drizzle-kit check",
+		"db:migrate": "bun run src/lib/server/db/migrate.ts",
+		"editor:build": "bun run scripts/build-editor.ts"
+	},
+	"dependencies": {
+		"@fedify/fedify": "^2.4.5",
+		"@fedify/sveltekit": "^2.4.5",
+		"@sveltejs/kit": "^3",
+		"drizzle-orm": "^1.0.0-rc.5",
+		"fflate": "^0.8.3",
+		"isomorphic-git": "^1.44.13",
+		"svelte": "^5.57.3",
+		"zod": "^4.6.7"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-bun": "^1.0.1",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"@types/bun": "^1.4.4",
+		"@typescript/native": "npm:typescript@7",
+		"@vitest/browser-playwright": "^5.1.0",
+		"drizzle-kit": "^1.0.0-rc.5",
+		"happy-dom": "^21.0.4",
+		"playwright": "^1.65.0",
+		"svelte-check": "^4.7.8",
+		"typescript": "~6.0.3",
+		"vite": "^8.3.8",
+		"vitest": "^5.1.0",
+		"vitest-browser-svelte": "^3.1.0"
+	}
+}

@@ -1,2 +1,20 @@
 [fmt]
-ignorePatterns = [".agents/skills/"]
+ignorePatterns = [
+	".agents/skills/",
+	".claude/skills/",
+	".svelte-kit/",
+	"build/",
+	"drizzle/",
+	"editor/",
+	"data/",
+	".mcp.json",
+	"skills-lock.json"
+]
+singleQuote = true
+printWidth = 100
+useTabs = true
+trailingComma = "none"
+
+[test]
+# Points server modules at a throwaway data directory (and a test database when configured).
+preload = ["./src/lib/server/test-setup.ts"]

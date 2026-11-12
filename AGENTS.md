@@ -2,7 +2,7 @@
 
 ## Overview
 
-abwww is the website for AstroBlocks: an alternative to the Scratch website, with TurboWarp-level features on top. Nothing is built yet, so this file describes what we are building and the rules for building it. When a planned piece lands, replace the plan here with what actually exists. License: AGPL-3.0, so anyone running a modified copy as a service has to publish their source.
+abwww is the website for AstroBlocks: an alternative to the Scratch website, with TurboWarp-level features on top. The MVP is in place; `docs/roadmap.md` says what is done and what is next. When something here stops matching the code, fix it here. License: AGPL-3.0, so anyone running a modified copy as a service has to publish their source.
 
 What it does:
 
@@ -14,7 +14,7 @@ What it does:
 
 Stack:
 
-- TypeScript everywhere, Svelte with runes, SvelteKit 3, and the official `@sveltejs/adapter-bun` (1.0, needs Bun 1.4 or newer). The community `svelte-adapter-bun` package is deprecated, so don't use it.
+- TypeScript everywhere, Svelte with runes, SvelteKit 3 (all configuration lives in `vite.config.ts`; there is no `svelte.config.js` any more), and the official `@sveltejs/adapter-bun` (1.0, needs Bun 1.4 or newer). The community `svelte-adapter-bun` package is deprecated, so don't use it.
 - PostgreSQL for the database, through [Drizzle ORM](https://orm.drizzle.team) v1 on its `drizzle-orm/bun-sql` driver (`Bun.sql` underneath), with drizzle-kit for migrations.
 - Valkey for key-value data (sessions, rate limits, verification codes, caches, Fedify's KV store and queue), through `Bun.redis` / `Bun.RedisClient`.
 - zstd for stored `project.json` files, through `Bun.zstdCompress` and `Bun.zstdDecompress`.
@@ -22,40 +22,40 @@ Stack:
 
 Hosting: self-hosted for now. If we grow to thousands of users we will likely move to Vercel. Cloudflare Workers is a distant second choice, since Workers does not run Bun and every Bun API would have to be swapped. Write code so that either move is a contained job, not a rewrite (see "Keep Bun behind a seam").
 
-## Planned layout
+## Layout
 
-This is the intended shape. Update it as the code appears.
-
-- `src/routes/`: SvelteKit pages and endpoints.
+- `src/routes/`: SvelteKit pages (form actions for everything the site itself does) and `api/` endpoints (what the editor calls). `src/routes/editor/` serves the editor's static build from `EDITOR_DIR`.
 - `src/lib/components/`: Svelte components.
 - `src/lib/server/`: server-only code. SvelteKit refuses to import it from client code, which is the point.
-  - `platform/`: the only place that touches `Bun.*` or `bun:*` (database, Valkey, compression, hashing, files, object storage).
-  - `db/`: the Drizzle schema (`schema/`, one file per area: users, projects, assets, federation) and shared queries. drizzle-kit reads it through `drizzle.config.ts` at the root and writes migrations to `drizzle/`.
+  - `platform/`: the only place that touches `Bun.*` or `bun:*` (database, Valkey, compression, hashing, passwords, blob store, filesystem for git, ids).
+  - `db/`: the Drizzle schema (`schema/`, one file per area: users, projects, assets, federation) and the migration runner. drizzle-kit reads it through `drizzle.config.ts` at the root and writes migrations to `drizzle/`.
+  - `auth/`: users, sessions and editor tokens (both in Valkey).
+  - `assets/`: content-addressed storage and the staging area for assets the editor uploads before a save.
+  - `projects/`: sb3 packing, `project.json` validation, the project service (create, save, restore, visibility) and the URLs the editor is opened with.
+  - `git/`: one bare repository per project through isomorphic-git plumbing.
   - `scratch/`: the client for the Scratch API, account verification and project import.
-  - `assets/`: content-addressed asset storage and the md5 to sha256 mapping.
-  - `projects/`: reading, writing, compressing and validating `project.json` and `.sb3` files.
-  - `git/`: isomorphic-git and the filesystem backend it runs on.
-  - `federation/`: the Fedify `Federation` object, actor and object dispatchers, inbox listeners.
-- `src/hooks.server.ts`: the `handle` sequence: sessions, then Fedify's `fedifyHook` from `@fedify/sveltekit`, combined with `sequence()`.
-- `editor/`: build output of the AstroBlocks editor, not source. How it gets there is decided once in one script, and git ignores the output.
-- `docs/`: Markdown documentation, including self-hosting instructions.
+  - `federation/`: the Fedify `Federation` object and its Valkey-backed KV store and message queue.
+  - `api/`: helpers shared by `src/routes/api/` (callers, body limits, error mapping).
+  - `config.ts`: every environment variable, validated once at startup.
+- `src/hooks.server.ts`: `init` runs migrations and starts the federation queue; `handle` is Fedify's hook, CORS for `/api/`, then sessions.
+- `editor/`: the editor's build output, not source; git ignores it. `scripts/build-editor.ts` produces it.
+- `docs/`: `self-hosting.md`, `editor.md`, `architecture.md`, `roadmap.md`.
 - `Dockerfile` and `compose.yaml`: the self-hosting setup (app, PostgreSQL, Valkey).
+
+Imports use `#lib/...` (SvelteKit 3 replaced `$lib`), with file extensions, as in `#lib/server/config.js`.
 
 ## Building and testing
 
+`CONTRIBUTING.md` has the setup and the command table; this is what matters beyond it.
+
 Use Bun for everything: `bun install`, `bun run`, `bunx`, `bun test`. Do not use npm, pnpm, yarn or Node. The lock file is `bun.lock`; commit it whenever `package.json` changes.
 
-Once `package.json` exists, list the real scripts here. Expected:
-
-- `bun run dev`: Vite dev server.
-- `bun run build`: production build through adapter-bun. `bun run preview` or `bun ./build/index.js` runs it.
-- `bun run check`: `svelte-kit sync` and `svelte-check`. This is the authoritative type check, because it understands `.svelte` files. `bun check` is fine for a quick pass over plain `.ts` files.
-- `bun test`: unit tests with `bun:test`. Test files sit next to the code as `*.test.ts`.
-- `bunx drizzle-kit generate`: writes a migration after a schema change. `bunx drizzle-kit check` catches migrations from different branches that conflict.
-- `bun run test:e2e`: Playwright against a production build.
-- `docker compose up --build`: the full stack, the same way a self-hoster would run it.
-
-Tests that need PostgreSQL or Valkey run against real ones from `compose.yaml`, not mocks. Mock the Scratch API with recorded responses, never call the real one from tests.
+- `bun run check` is the authoritative type check. It runs `svelte-check --tsgo`: TypeScript 7's native checker, with TypeScript 6 installed too because svelte-check's own Svelte-to-TypeScript transform still needs it. Run it before saying anything type checks.
+- Server tests are `bun test` over `src/lib/server`, because that code uses Bun APIs. They sit next to the code as `*.test.ts` and run against a real PostgreSQL and Valkey (`TEST_DATABASE_URL` and `TEST_VALKEY_URL` override the defaults) with a throwaway `DATA_DIR`, all set up by `src/lib/server/test-setup.ts`. Tests that create rows clean them up.
+- Component tests are Vitest: `*.svelte.test.ts` runs in a real Chromium through `@vitest/browser-playwright` and `vitest-browser-svelte`; `*.dom.test.ts` runs in happy-dom, for component logic that needs a DOM but not a browser. Pick the cheapest one that proves the point. `bun test` must never pick these up, which is why `test:server` is pointed at `src/lib/server`; keep it that way.
+- Never call the real Scratch API from tests; record responses instead.
+- Test data, fixtures, seeded demo accounts and screenshots use placeholder names such as `johndoe` and `janedoe`, never a real person's name.
+- `docker compose up --build` is the full stack, the same way a self-hoster runs it. Use it to check the Dockerfile and compose changes, not just the dev server.
 
 ## Verifying in a Browser
 
@@ -81,12 +81,12 @@ The Bun docs MCP server is configured in `.mcp.json`. Use it for Bun questions i
 Always lint and format:
 
 - Format with `bun fmt`. It is Prettier-compatible, formats `.svelte` files natively and is configured in `bunfig.toml` under `[fmt]`. Do not add Prettier or `prettier-plugin-svelte`.
-- The linter isn't picked yet. Pick whichever current tool handles TypeScript and `.svelte` templates properly, wire it into a script, and document it here.
+- Lint with `bun lint` once the Bun release in use has it (it is in Bun's docs but not in 1.4.4). Do not add ESLint or oxlint. Until then, `bun run check` is the gate: svelte-check reports unused code and accessibility problems in `.svelte` files as well as type errors.
 
 Use modern code practices:
 
 - Svelte runes (`$state`, `$derived`, `$effect`, `$props`) only. No legacy `$:` statements, `export let`, or stores where a rune does the job.
-- Strict TypeScript. No `any` without a comment saying why. Validate everything that comes from outside (requests, Scratch API responses, uploaded projects, federated activities) at the boundary with a schema, then trust the types inside.
+- Strict TypeScript, with `noUncheckedIndexedAccess`. No `any` without a comment saying why. Validate everything that comes from outside (requests, Scratch API responses, uploaded projects, federated activities) at the boundary with a zod schema, then trust the types inside.
 - Use web standard APIs (`fetch`, `Request`, `Response`, `URL`, `crypto.subtle`, streams, `CompressionStream`) before anything runtime-specific.
 - Use form actions and `load` functions where they fit, and plain `+server.ts` endpoints for the API that the editor and other clients call.
 
@@ -110,9 +110,9 @@ Do not keep state in process memory that has to survive a request (sessions, rat
 
 The editor is React, the website is not. Never add React, or any other dependency of the AstroBlocks packages, to this project's `package.json`, and never import editor source from website code. The editor is built in its own repository with its own toolchain (pnpm, rspack), and this project only consumes the static build output.
 
-The site and the editor talk through one documented interface: the project and asset URLs the editor loads from and saves to, plus a typed `postMessage` bridge for anything else (save state, title, sign-in state). Keep the message types in one file that both sides can copy.
+The site and the editor talk only through URLs the editor already understands (`project_url`, `project_title`, the `#0` hash) and the API the editor's save code expects (`POST /api/projects`, `PUT /api/projects/<id>`, `POST /api/assets/<md5ext>`). `docs/editor.md` has the details and what is still missing on the editor side. Everything that builds those URLs is in `src/lib/server/projects/urls.ts`.
 
-TurboWarp-style custom extensions can run arbitrary JavaScript, and shared projects can bring them along. Serve the editor and player from a separate origin from the site (for example a separate subdomain with no access to session cookies) or in a sandboxed iframe, so a malicious project cannot act as the user who opened it.
+TurboWarp-style custom extensions can run arbitrary JavaScript, and shared projects can bring them along. The player is an iframe whose `sandbox` must keep `allow-same-origin` (the editor's SVG renderer parses costumes in a helper frame and breaks without it), and the editor is opened top level, so neither is isolated by the browser. What isolates them is the separate origin: in production the editor is served from `EDITOR_URL` on its own hostname, where there is no session cookie and a project cannot act as the person viewing it. Editor tokens, not cookies, authenticate the editor to the API. Never make the editor origin a trusted origin for forms, and never let `/api/` accept cookies from cross-origin requests.
 
 ### Scratch accounts
 

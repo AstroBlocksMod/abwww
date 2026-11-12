@@ -1,0 +1,52 @@
+# A complete instance: the site, PostgreSQL and Valkey.
+#   cp .env.example .env   (set ORIGIN to your public URL)
+#   docker compose up --build
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - '${PORT:-3000}:3000'
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://abwww:${POSTGRES_PASSWORD:-abwww}@db:5432/abwww
+      VALKEY_URL: redis://valkey:6379
+      DATA_DIR: /app/data
+      EDITOR_DIR: /app/editor
+      BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-256M}
+    volumes:
+      - data:/app/data
+      # Drop the editor's static build in ./editor to serve it from this instance.
+      - ./editor:/app/editor:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: abwww
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-abwww}
+      POSTGRES_DB: abwww
+    volumes:
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U abwww -d abwww']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  valkey:
+    image: valkey/valkey:9-alpine
+    restart: unless-stopped
+    command: ['valkey-server', '--save', '60', '1', '--appendonly', 'yes']
+    volumes:
+      - valkey:/data
+
+volumes:
+  data:
+  postgres:
+  valkey:
