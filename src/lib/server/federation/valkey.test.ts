@@ -3,6 +3,9 @@ import { kv } from '../platform/kv.js';
 import { ValkeyKvStore } from './kv.js';
 import { ValkeyMessageQueue } from './queue.js';
 
+/** Orders listed `[key, value]` entries by their key path. */
+const byKey = (a: unknown, b: unknown) =>
+	(a as [string[]])[0].join('/').localeCompare((b as [string[]])[0].join('/'));
 const prefix = `test:${crypto.randomUUID()}:`;
 
 describe('ValkeyKvStore', () => {
@@ -17,7 +20,7 @@ describe('ValkeyKvStore', () => {
 
 		const listed: unknown[] = [];
 		for await (const entry of store.list(['a'])) listed.push([entry.key, entry.value]);
-		expect(listed.sort()).toEqual([
+		expect(listed.toSorted(byKey)).toEqual([
 			[['a'], { n: 1 }],
 			[['a', 'b'], 'child']
 		]);

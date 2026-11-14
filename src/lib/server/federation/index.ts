@@ -32,14 +32,14 @@ import { ValkeyMessageQueue } from './queue.js';
 export const federation: Federation<void> = lazy(createAbwwwFederation);
 
 function createAbwwwFederation(): Federation<void> {
-	const federation = createFederation<void>({
+	const instance = createFederation<void>({
 		kv: new ValkeyKvStore(kv),
 		queue: new ValkeyMessageQueue(kv),
 		origin: config.ORIGIN,
 		manuallyStartQueue: true
 	});
-	registerDispatchers(federation);
-	return federation;
+	registerDispatchers(instance);
+	return instance;
 }
 
 /** Only the exact spelling the user registered with is an actor. */
@@ -48,8 +48,8 @@ async function actorUser(identifier: string) {
 	return user && user.username === identifier ? user : null;
 }
 
-function registerDispatchers(federation: Federation<void>): void {
-	federation
+function registerDispatchers(fed: Federation<void>): void {
+	fed
 		.setActorDispatcher('/users/{identifier}', async (ctx, identifier) => {
 			const user = await actorUser(identifier);
 			if (!user) return null;
@@ -79,7 +79,7 @@ function registerDispatchers(federation: Federation<void>): void {
 			);
 		});
 
-	federation
+	fed
 		.setFollowersDispatcher('/users/{identifier}/followers', async (_ctx, identifier) => {
 			const user = await actorUser(identifier);
 			if (!user) return null;
@@ -101,7 +101,7 @@ function registerDispatchers(federation: Federation<void>): void {
 			return row?.value ?? 0;
 		});
 
-	federation
+	fed
 		.setInboxListeners('/users/{identifier}/inbox', '/inbox')
 		.on(Follow, async (ctx, follow) => {
 			if (!follow.id || !follow.objectId) return;
@@ -143,7 +143,7 @@ function registerDispatchers(federation: Federation<void>): void {
 				.where(and(eq(followers.userId, user.id), eq(followers.actorUri, undo.actorId.href)));
 		});
 
-	federation.setNodeInfoDispatcher('/nodeinfo/2.1', async () => {
+	fed.setNodeInfoDispatcher('/nodeinfo/2.1', async () => {
 		const [userRow] = await db.select({ value: count() }).from(users);
 		const [projectRow] = await db
 			.select({ value: count() })

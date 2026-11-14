@@ -24,6 +24,7 @@ it the site works, but projects cannot be played.
 | --------------------- | -------------------------------------------------------------------- |
 | `bun run dev`         | Dev server with hot reload.                                          |
 | `bun run check`       | Type checks everything, Svelte files included. CI runs this.         |
+| `bun run lint`        | Lints with oxlint, Svelte files included. CI runs this.              |
 | `bun fmt`             | Formats. `bun fmt --check` is what CI runs.                          |
 | `bun run test:server` | Server tests (`bun test`) against the compose PostgreSQL and Valkey. |
 | `bun run test:unit`   | Component tests with Vitest, in Chromium and in happy-dom.           |

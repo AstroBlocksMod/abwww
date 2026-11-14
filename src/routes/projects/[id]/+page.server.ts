@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { formText } from '#lib/server/api/form.js';
 import { mapErrors } from '#lib/server/api/errors.js';
 import { issueEditorToken } from '#lib/server/auth/tokens.js';
 import { findUserById } from '#lib/server/auth/users.js';
@@ -91,9 +92,9 @@ export const actions: Actions = {
 		const project = await ownedProject(params.id, locals);
 		const form = await request.formData();
 		await updateProjectDetails(project, {
-			title: String(form.get('title') ?? project.title),
-			instructions: String(form.get('instructions') ?? ''),
-			description: String(form.get('description') ?? '')
+			title: formText(form, 'title', project.title),
+			instructions: formText(form, 'instructions'),
+			description: formText(form, 'description')
 		});
 		return { saved: true };
 	},
@@ -101,7 +102,7 @@ export const actions: Actions = {
 	visibility: async ({ params, request, locals }) => {
 		const project = await ownedProject(params.id, locals);
 		const form = await request.formData();
-		const value = String(form.get('visibility') ?? '');
+		const value = formText(form, 'visibility');
 		if (!projectVisibility.enumValues.includes(value as never))
 			return fail(400, { error: 'Unknown visibility' });
 		const result = await updateProjectDetails(project, {

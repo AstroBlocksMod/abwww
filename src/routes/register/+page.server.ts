@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import type { Actions, PageServerLoad } from './$types';
+import { formText } from '#lib/server/api/form.js';
 import { createSession, setSessionCookie } from '#lib/server/auth/sessions.js';
 import {
 	passwordSchema,
@@ -35,7 +36,7 @@ export const actions: Actions = {
 		if (!parsed.success) {
 			return fail(400, {
 				error: parsed.error.issues[0]?.message ?? 'Check the form',
-				username: String(form.get('username') ?? '')
+				username: formText(form, 'username')
 			});
 		}
 		try {

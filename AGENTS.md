@@ -81,7 +81,10 @@ The Bun docs MCP server is configured in `.mcp.json`. Use it for Bun questions i
 Always lint and format:
 
 - Format with `bun fmt`. It is Prettier-compatible, formats `.svelte` files natively and is configured in `bunfig.toml` under `[fmt]`. Do not add Prettier or `prettier-plugin-svelte`.
-- Lint with `bun lint` once the Bun release in use has it (it is in Bun's docs but not in 1.4.4). Do not add ESLint or oxlint. Until then, `bun run check` is the gate: svelte-check reports unused code and accessibility problems in `.svelte` files as well as type errors.
+- Lint with `bun run lint`, which is oxlint with type-aware rules (`oxlint-tsgolint`) and `--deny-warnings`, configured in `.oxlintrc.json`. It also lints the `<script>` blocks of `.svelte` files. Do not add ESLint. oxlint is a stopgap until `bun lint` ships in a stable Bun (it is in Bun's docs but not in 1.4.4); `bun lint` reads `.oxlintrc.json`, so the switch is changing the `lint` script.
+- Rules turned off in `.oxlintrc.json`, and why: `no-await-in-loop` (the sequential awaits here are on purpose: locks, polling, the queue), `typescript/no-unsafe-type-assertion` (it flags every `JSON.parse` of our own stored data; outside input is validated with zod instead), `typescript/consistent-return` (it misreads functions that end in SvelteKit's `redirect()` or `error()`, which never return), `unicorn/require-module-specifiers` (`export {}` is how `app.d.ts` stays a module). In test files `typescript/await-thenable` is off because bun-types declare `expect().rejects` matchers as sync. Don't silence anything else without adding it here.
+- Read form fields with `formText()` from `#lib/server/api/form.js`, never `String(form.get(...))`, which turns an uploaded file into `"[object File]"`.
+- Types are checked with `bun run check` (svelte-check), not `bun check`: `bun check` passes over `.svelte` files without looking at them.
 
 Use modern code practices:
 

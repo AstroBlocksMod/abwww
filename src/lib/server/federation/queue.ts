@@ -63,7 +63,8 @@ export class ValkeyMessageQueue implements MessageQueue {
 		options: MessageQueueListenOptions = {}
 	): Promise<void> {
 		const { signal } = options;
-		while (!signal?.aborted) {
+		const stopped = () => signal?.aborted === true;
+		while (!stopped()) {
 			let body: string | null = null;
 			try {
 				await this.promoteDue();

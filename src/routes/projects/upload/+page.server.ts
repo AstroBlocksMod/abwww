@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { formText } from '#lib/server/api/form.js';
 import { mapErrors } from '#lib/server/api/errors.js';
 import { config } from '#lib/server/config.js';
 import { unpackSb3 } from '#lib/server/projects/sb3.js';
@@ -22,7 +23,7 @@ export const actions: Actions = {
 		if (file.size > config.SB3_MAX_BYTES) {
 			return fail(413, { error: `Files can be at most ${config.SB3_MAX_BYTES} bytes` });
 		}
-		const title = String(form.get('title') ?? '').trim() || file.name.replace(/\.sb3$/i, '');
+		const title = formText(form, 'title').trim() || file.name.replace(/\.sb3$/i, '');
 		const { projectJson, assets } = await mapErrors(async () =>
 			unpackSb3(new Uint8Array(await file.arrayBuffer()))
 		);

@@ -4,8 +4,8 @@ import ProjectCard from './ProjectCard.svelte';
 
 let instance: ReturnType<typeof mount> | null = null;
 
-afterEach(() => {
-	if (instance) unmount(instance);
+afterEach(async () => {
+	if (instance) await unmount(instance);
 	instance = null;
 	document.body.innerHTML = '';
 });

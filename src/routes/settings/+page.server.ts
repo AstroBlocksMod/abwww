@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { formText } from '#lib/server/api/form.js';
 import { mapErrors } from '#lib/server/api/errors.js';
 import { findUserById, toPublicUser, updateProfile } from '#lib/server/auth/users.js';
 import { getUserProjects, type ScratchProjectSummary } from '#lib/server/scratch/client.js';
@@ -46,10 +47,8 @@ export const actions: Actions = {
 	profile: async ({ request, locals }) => {
 		const user = requireUser(locals);
 		const form = await request.formData();
-		const displayName = String(form.get('displayName') ?? '')
-			.trim()
-			.slice(0, 50);
-		const bio = String(form.get('bio') ?? '').slice(0, 2000);
+		const displayName = formText(form, 'displayName').trim().slice(0, 50);
+		const bio = formText(form, 'bio').slice(0, 2000);
 		await updateProfile(user.id, { displayName: displayName || null, bio });
 		return { profileSaved: true };
 	},
@@ -57,7 +56,7 @@ export const actions: Actions = {
 	startVerification: async ({ request, locals }) => {
 		const user = requireUser(locals);
 		const form = await request.formData();
-		const scratchUsername = String(form.get('scratchUsername') ?? '').trim();
+		const scratchUsername = formText(form, 'scratchUsername').trim();
 		try {
 			await startVerification(user.id, scratchUsername);
 		} catch (err) {

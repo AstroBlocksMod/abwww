@@ -6,7 +6,7 @@ import Player from './Player.svelte';
 describe('Player', () => {
 	test('embeds the player in a frame that cannot navigate the page', async () => {
 		const src = 'http://localhost:5173/editor/embed.html?project_url=x#0';
-		render(Player, { src, title: 'My project' });
+		await render(Player, { src, title: 'My project' });
 		const frame = page.getByTitle('My project');
 		await expect.element(frame).toBeInTheDocument();
 		const element = frame.element() as HTMLIFrameElement;

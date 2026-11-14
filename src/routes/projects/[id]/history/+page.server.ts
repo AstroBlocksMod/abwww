@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { formText } from '#lib/server/api/form.js';
 import { mapErrors } from '#lib/server/api/errors.js';
 import { listHistory } from '#lib/server/git/repo.js';
 import { canEdit, canView, getProject, restoreVersion } from '#lib/server/projects/service.js';
@@ -21,7 +22,7 @@ export const actions: Actions = {
 		if (!locals.user || !canEdit(project, locals.user))
 			error(403, 'Only the owner can restore versions');
 		const form = await request.formData();
-		const oid = String(form.get('oid') ?? '');
+		const oid = formText(form, 'oid');
 		if (!/^[0-9a-f]{40}$/.test(oid)) return fail(400, { error: 'Unknown version' });
 		await mapErrors(() =>
 			restoreVersion(project.id, oid, { id: locals.user!.id, username: locals.user!.username })
